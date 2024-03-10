@@ -9,7 +9,6 @@ from invokeai.app.invocations.baseinvocation import (
     invocation,
     InvocationContext,
     WithMetadata,
-    WithWorkflow,
 )
 
 from invokeai.app.invocations.primitives import (
@@ -24,7 +23,7 @@ from invokeai.app.invocations.primitives import (
     category="image",
     version="1.0.0",
 )
-class RotateImageInvocation(BaseInvocation, WithMetadata, WithWorkflow):
+class RotateImageInvocation(BaseInvocation, WithMetadata):
     """Rotate an image by a given angle."""
     image: ImageField = InputField(default=None, description="Image to be rotated")
     rotate: int = InputField(default=180., description="The angle to rotate the image")
@@ -33,16 +32,16 @@ class RotateImageInvocation(BaseInvocation, WithMetadata, WithWorkflow):
 
         image = context.services.images.get_pil_image(self.image.image_name)
 
-        image.rotate(self.rotate)
+        image_rotated = image.rotate(self.rotate)
 
         image_dto = context.services.images.create(
-            image=image,
+            image=image_rotated,
             image_origin=ResourceOrigin.INTERNAL,
             image_category=ImageCategory.GENERAL,
             node_id=self.id,
             session_id=context.graph_execution_state_id,
             is_intermediate=self.is_intermediate,
-            workflow=self.workflow,
+            workflow=context.workflow,
         )
 
         return ImageOutput(
